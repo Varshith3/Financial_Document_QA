@@ -1,0 +1,8 @@
+.env
+
+metrics.db
+
+faiss.index
+
+.venv
+__pycache__/
