@@ -1,0 +1,57 @@
+name: Claude Code Review (via Bedrock)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+
+        with:
+          use_bedrock: "true"
+
+          github_token: ${{ github.token }}
+
+          show_full_output: true
+          use_sticky_comment: true
+          display_report: true
+
+          prompt: |
+            Review this Python RAG chatbot PR.
+
+            Focus on:
+            - bugs
+            - LangChain issues
+            - security problems
+            - missing error handling
+            - Streamlit-breaking changes
+
+            IMPORTANT:
+            Output the final review as markdown suitable for a GitHub PR comment.
+
+            Do NOT use gh CLI commands.
+
+          claude_args: "--model global.anthropic.claude-sonnet-4-6"
