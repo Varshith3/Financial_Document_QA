@@ -1,4 +1,4 @@
-name: Claude Code Review (via Bedrock)
+name: Claude PR Review via Bedrock
 
 on:
   pull_request:
@@ -15,12 +15,12 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Configure AWS credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -28,19 +28,15 @@ jobs:
           aws-region: us-east-1
 
       - name: Run Claude Code Review
+        id: claude
         uses: anthropics/claude-code-action@v1
-
         with:
           use_bedrock: "true"
-
           github_token: ${{ github.token }}
-
           show_full_output: true
-          use_sticky_comment: true
-          display_report: true
 
           prompt: |
-            Review this Python RAG chatbot PR.
+            Review this PR.
 
             Focus on:
             - bugs
@@ -50,8 +46,14 @@ jobs:
             - Streamlit-breaking changes
 
             IMPORTANT:
-            Output the final review as markdown suitable for a GitHub PR comment.
+            Output ONLY markdown. 
 
-            Do NOT use gh CLI commands.
+          claude_args: |
+            --model global.anthropic.claude-sonnet-4-6
 
-          claude_args: "--model global.anthropic.claude-sonnet-4-6"
+      - name: Post PR Review Comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body-file "${{ steps.claude.outputs.report_file }}"
