@@ -20,3 +20,5 @@ if submit_button and query:
                 st.markdown(answer)
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
+
+# Test comment to trigger claude code in github actions.
